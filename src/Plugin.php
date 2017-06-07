@@ -15,6 +15,6 @@ class Plugin {
 
 	public static function Settings(GenericEvent $event) {
 		$settings = $event->getSubject();
-		$settings->add_dropdown_setting('servers', 'General', 'outofstock_servers', 'Out Of Stock Servers', 'Enable/Disable Sales Of This Type', $settings->get_setting('OUTOFSTOCK_WEBHOSTING'), array('0', '1'), array('No', 'Yes', ));
+		$settings->add_dropdown_setting('servers', 'General', 'outofstock_servers', 'Out Of Stock Servers', 'Enable/Disable Sales Of This Type', $settings->get_setting('OUTOFSTOCK_SERVERS'), array('0', '1'), array('No', 'Yes', ));
 	}
 }
