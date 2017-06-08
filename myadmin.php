@@ -5,7 +5,7 @@
  - add way to call/hook into install/uninstall
 */
 return [
-	'name' => 'MyAdmin Dedicated Servers Module for MyAdmin',
+	'name' => 'Dedicated Servers Module',
 	'description' => 'Allows selling of Dedicated Servers Module',
 	'help' => '',
 	'module' => 'servers',
