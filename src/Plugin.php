@@ -6,7 +6,21 @@ use Symfony\Component\EventDispatcher\GenericEvent;
 
 class Plugin {
 
+	public static $name = 'Dedicated Servers Module';
+	public static $description = 'Allows selling of Dedicated Servers Module';
+	public static $help = '';
+	public static $module = 'servers';
+	public static $type = 'module';
+
+
 	public function __construct() {
+	}
+
+	public static function Hooks() {
+		return [
+			'servers.load_processing' => ['Detain\MyAdminServers\Plugin', 'Load'],
+			'servers.settings' => ['Detain\MyAdminServers\Plugin', 'Settings'],
+		];
 	}
 
 	public static function Load(GenericEvent $event) {
