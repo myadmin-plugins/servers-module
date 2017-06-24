@@ -11,6 +11,23 @@ class Plugin {
 	public static $help = '';
 	public static $module = 'servers';
 	public static $type = 'module';
+	public static $settings = [
+		'SERVICE_ID_OFFSET' => 4000,
+		'USE_REPEAT_INVOICE' => true,
+		'USE_PACKAGES' => false,
+		'BILLING_DAYS_OFFSET' => 0,
+		'IMGNAME' => 'vcard_48.png',
+		'REPEAT_BILLING_METHOD' => PRORATE_BILLING,
+		'DELETE_PENDING_DAYS' => 45,
+		'SUSPEND_DAYS' => 14,
+		'SUSPEND_WARNING_DAYS' => 7,
+		'TITLE' => 'Dedicated Servers',
+		'MENUNAME' => 'Servers',
+		'EMAIL_FROM' => 'support@interserver.net',
+		'TBLNAME' => 'Servers',
+		'TABLE' => 'servers',
+		'TITLE_FIELD' => 'server_hostname',
+		'PREFIX' => 'server'];
 
 
 	public function __construct() {
