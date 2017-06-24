@@ -13,8 +13,8 @@ class Plugin {
 	public static $type = 'module';
 	public static $settings = [
 		'SERVICE_ID_OFFSET' => 4000,
-		'USE_REPEAT_INVOICE' => true,
-		'USE_PACKAGES' => false,
+		'USE_REPEAT_INVOICE' => TRUE,
+		'USE_PACKAGES' => FALSE,
 		'BILLING_DAYS_OFFSET' => 0,
 		'IMGNAME' => 'vcard_48.png',
 		'REPEAT_BILLING_METHOD' => PRORATE_BILLING,
