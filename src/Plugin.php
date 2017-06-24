@@ -18,8 +18,8 @@ class Plugin {
 
 	public static function getHooks() {
 		return [
-			'servers.load_processing' => [__CLASS__, 'loadProcessing'],
-			'servers.settings' => [__CLASS__, 'getSettings'],
+			self::$module.'.load_processing' => [__CLASS__, 'loadProcessing'],
+			self::$module.'.settings' => [__CLASS__, 'getSettings'],
 		];
 	}
 
@@ -29,6 +29,6 @@ class Plugin {
 
 	public static function getSettings(GenericEvent $event) {
 		$settings = $event->getSubject();
-		$settings->add_dropdown_setting('servers', 'General', 'outofstock_servers', 'Out Of Stock Servers', 'Enable/Disable Sales Of This Type', $settings->get_setting('OUTOFSTOCK_SERVERS'), array('0', '1'), array('No', 'Yes', ));
+		$settings->add_dropdown_setting(self::$module, 'General', 'outofstock_servers', 'Out Of Stock Servers', 'Enable/Disable Sales Of This Type', $settings->get_setting('OUTOFSTOCK_SERVERS'), array('0', '1'), array('No', 'Yes', ));
 	}
 }
