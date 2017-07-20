@@ -4,6 +4,11 @@ namespace Detain\MyAdminServers;
 
 use Symfony\Component\EventDispatcher\GenericEvent;
 
+/**
+ * Class Plugin
+ *
+ * @package Detain\MyAdminServers
+ */
 class Plugin {
 
 	public static $name = 'Dedicated Servers';
@@ -29,10 +34,15 @@ class Plugin {
 		'TITLE_FIELD' => 'server_hostname',
 		'PREFIX' => 'server'];
 
-
+	/**
+	 * Plugin constructor.
+	 */
 	public function __construct() {
 	}
 
+	/**
+	 * @return array
+	 */
 	public static function getHooks() {
 		return [
 			self::$module.'.load_processing' => [__CLASS__, 'loadProcessing'],
@@ -40,10 +50,16 @@ class Plugin {
 		];
 	}
 
+	/**
+	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
+	 */
 	public static function loadProcessing(GenericEvent $event) {
 
 	}
 
+	/**
+	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
+	 */
 	public static function getSettings(GenericEvent $event) {
 		$settings = $event->getSubject();
 		$settings->add_dropdown_setting(self::$module, 'General', 'outofstock_servers', 'Out Of Stock Servers', 'Enable/Disable Sales Of This Type', $settings->get_setting('OUTOFSTOCK_SERVERS'), ['0', '1'], ['No', 'Yes']);
