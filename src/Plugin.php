@@ -10,7 +10,6 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  * @package Detain\MyAdminServers
  */
 class Plugin {
-
 	public static $name = 'Dedicated Servers';
 	public static $description = 'Allows selling of Dedicated Servers Module';
 	public static $help = '';
@@ -45,16 +44,54 @@ class Plugin {
 	 */
 	public static function getHooks() {
 		return [
+			self::$module.'.activate' => [__CLASS__, 'getActivate'],
 			self::$module.'.load_processing' => [__CLASS__, 'loadProcessing'],
 			self::$module.'.settings' => [__CLASS__, 'getSettings']
 		];
+	}
+
+
+	/**
+	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
+	 */
+	public static function getActivate(GenericEvent $event) {
+		$serviceClass = $event->getSubject();
+		myadmin_log(self::$module, 'info', 'Dedicated Server Activation', __LINE__, __FILE__);
+		$event->stopPropagation();
 	}
 
 	/**
 	 * @param \Symfony\Component\EventDispatcher\GenericEvent $event
 	 */
 	public static function loadProcessing(GenericEvent $event) {
-
+		$service = $event->getSubject();
+		$service->setModule(self::$module)
+			->set_enable(function($service) {
+				$serviceTypes = run_event('get_service_types', FALSE, self::$module);
+				$serviceInfo = $service->getServiceInfo();
+				$settings = get_module_settings(self::$module);
+				$db = get_module_db(self::$module);
+				$db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
+				$GLOBALS['tf']->history->add(self::$module, 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+				admin_email_server_pending_setup($serviceInfo[$settings['PREFIX'].'_id']);
+			})->set_reactivate(function($service) {
+				$serviceTypes = run_event('get_service_types', FALSE, self::$module);
+				$serviceInfo = $service->getServiceInfo();
+				$settings = get_module_settings(self::$module);
+				$db = get_module_db(self::$module);
+				$db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
+				$GLOBALS['tf']->history->add(self::$module, 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+				$smarty = new \TFSmarty;
+				$smarty->assign('server_name', $serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name']);
+				$email = $smarty->fetch('email/admin_email_server_reactivated.tpl');
+				$subject = $serviceInfo[$settings['TITLE_FIELD']].' '.$serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name'].' '.$settings['TBLNAME'].' Re-Activated';
+				$headers = '';
+				$headers .= 'MIME-Version: 1.0'.EMAIL_NEWLINE;
+				$headers .= 'Content-type: text/html; charset=UTF-8'.EMAIL_NEWLINE;
+				$headers .= 'From: '.TITLE.' <'.EMAIL_FROM.'>'.EMAIL_NEWLINE;
+				admin_mail($subject, $email, $headers, FALSE, 'admin_email_server_reactivated.tpl');
+			})->set_disable(function() {
+			})->register();
 	}
 
 	/**
