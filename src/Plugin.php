@@ -83,13 +83,13 @@ class Plugin {
 				$GLOBALS['tf']->history->add(self::$module, 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
 				$smarty = new \TFSmarty;
 				$smarty->assign('server_name', $serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name']);
-				$email = $smarty->fetch('email/admin_email_server_reactivated.tpl');
+				$email = $smarty->fetch('email/admin/server_reactivated.tpl');
 				$subject = $serviceInfo[$settings['TITLE_FIELD']].' '.$serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name'].' '.$settings['TBLNAME'].' Re-Activated';
 				$headers = '';
 				$headers .= 'MIME-Version: 1.0'.EMAIL_NEWLINE;
 				$headers .= 'Content-type: text/html; charset=UTF-8'.EMAIL_NEWLINE;
 				$headers .= 'From: '.TITLE.' <'.EMAIL_FROM.'>'.EMAIL_NEWLINE;
-				admin_mail($subject, $email, $headers, FALSE, 'admin_email_server_reactivated.tpl');
+				admin_mail($subject, $email, $headers, FALSE, 'admin/server_reactivated.tpl');
 			})->setDisable(function() {
 			})->register();
 	}
