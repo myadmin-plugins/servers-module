@@ -20,7 +20,7 @@ class Plugin {
 		'USE_REPEAT_INVOICE' => TRUE,
 		'USE_PACKAGES' => FALSE,
 		'BILLING_DAYS_OFFSET' => 0,
-		'IMGNAME' => 'vcard_48.png',
+		'IMGNAME' => 'stack.png',
 		'REPEAT_BILLING_METHOD' => PRORATE_BILLING,
 		'DELETE_PENDING_DAYS' => 45,
 		'SUSPEND_DAYS' => 14,
