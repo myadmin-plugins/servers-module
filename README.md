@@ -24,5 +24,5 @@ composer require detain/myadmin-servers-module
 
 ## License
 
-The Dedicated Servers Module for MyAdmin class is licensed under the LGPL-v2 license.
+The Dedicated Servers Module for MyAdmin class is licensed under the LGPL-v2.1 license.
 
