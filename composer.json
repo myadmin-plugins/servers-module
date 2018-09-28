@@ -1,5 +1,5 @@
 {
-	"name": "detain/servers-module",
+	"name": "detain/myadmin-servers-module",
 	"type": "myadmin-plugin",
 	"description": "Dedicated Servers Module for MyAdmin",
 	"keywords": [
