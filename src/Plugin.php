@@ -60,7 +60,7 @@ class Plugin
 	public static function getActivate(GenericEvent $event)
 	{
 		$serviceClass = $event->getSubject();
-		myadmin_log(self::$module, 'info', 'Dedicated Server Activation', __LINE__, __FILE__);
+		myadmin_log(self::$module, 'info', 'Dedicated Server Activation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
 		$event->stopPropagation();
 	}
 
