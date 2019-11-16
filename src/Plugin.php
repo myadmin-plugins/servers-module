@@ -93,7 +93,7 @@ class Plugin
 				$smarty->assign('server_name', $serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name']);
 				$email = $smarty->fetch('email/admin/server_reactivated.tpl');
 				$subject = $serviceInfo[$settings['TITLE_FIELD']].' '.$serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name'].' '.$settings['TBLNAME'].' Reactivated';
-				(new MyAdmin\Mail())->adminMail($subject, $email, false, 'admin/server_reactivated.tpl');
+				(new \MyAdmin\Mail())->adminMail($subject, $email, false, 'admin/server_reactivated.tpl');
 			})->setDisable(function () {
 			})->register();
 	}
