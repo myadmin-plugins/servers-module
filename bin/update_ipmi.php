@@ -10,7 +10,7 @@
 
 function update_ipmi_ip()
 {
-	require_once __DIR__.'/../../include/functions.inc.php';
+	require_once __DIR__.'/../../../../include/functions.inc.php';
 	$GLOBALS['tf']->session->create(160307, 'services', false, 0, false, substr(basename($_SERVER['argv'][0], '.php'), 0, 32));
 	if (!isset($_SERVER['SSH_CLIENT']) && $GLOBALS['tf']->ima !== 'admin' && $GLOBALS['tf']->accounts->data['ima'] !== 'admin') {
 		die('You\'re not authorized');
