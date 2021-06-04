@@ -10,7 +10,7 @@ echo 'Building list of servers + main ips';
 $db->query("select * from servers, assets where server_id=order_id order by server_status desc");
 $ips = [];
 while ($db->next_record(MYSQL_ASSOC)) {
-	$serviceInfo = $db->Record;    
+	$serviceInfo = $db->Record;
 	$networkInfo = get_server_network_info($serviceInfo['server_id']);
 	$has_ip = false;
 	if (count($networkInfo['vlans']) > 0) {
@@ -44,7 +44,7 @@ $settings = get_module_settings('licenses');
 foreach ($licenses['licenses'] as $idx => $licenseData) {
 	$ip = $licenseData['ip'];
 	if ($licenseData['envtype'] == 'standard' && array_key_exists($ip, $ips)) {
-		
+
 		$db->query("select * from repeat_invoices where repeat_invoices_module='servers' and repeat_invoices_service={$ips[$ip]['server_id']}");
 		if ($db->num_rows() > 0) {
 			echo "{$ip} {$ips[$ip]['server_status']} {$ips[$ip]['server_id']} {$ips[$ip]['server_hostname']}";
@@ -66,7 +66,7 @@ foreach ($licenses['licenses'] as $idx => $licenseData) {
 				} else {
 					$frequency = $db->Record['repeat_invoices_frequency'];
 					$cost = $license_cost;
-					$total_cost = $cost * $frequency; 
+					$total_cost = $cost * $frequency;
 					if ($frequency > 1) {
 						// apply the repeat service price for the other months
 						if ($frequency >= 36) {
@@ -97,8 +97,6 @@ foreach ($licenses['licenses'] as $idx => $licenseData) {
 							$settings['PREFIX'].'_id' => null,
 							$settings['PREFIX'].'_type' => $license_type,
 							$settings['PREFIX'].'_custid' => $db->Record['repeat_invoices_custid'],
-							$settings['PREFIX'].'_cost' => $total_cost,
-							$settings['PREFIX'].'_frequency' => $frequency,
 							$settings['PREFIX'].'_order_date' => $db->Record['repeat_invoices_date'],
 							$settings['PREFIX'].'_ip' => $ip,
 							$settings['PREFIX'].'_status' => 'active',
@@ -114,14 +112,13 @@ foreach ($licenses['licenses'] as $idx => $licenseData) {
 					$new_cost = bcsub($db->Record['repeat_invoices_cost'], $total_cost, 2);
 					echo '  Updating Server Repeat Invoice cost to $'.$new_cost.PHP_EOL;
 					if ($go == true) {
-						$db2->query("update servers set server_cost={$new_cost} where server_id={$ips[$ip]['server_id']}");
 						$repeatInvoiceObj = new \MyAdmin\Orm\Repeat_Invoice();
 						$repeatInvoiceObj->load_real($db->Record['repeat_invoices_id']);
 						if ($repeatInvoiceObj->loaded === true) {
 							$repeatInvoiceObj->setCost($new_cost)->save();
 						}
 					}
-					
+
 				}
 			}
 			//echo PHP_EOL;
