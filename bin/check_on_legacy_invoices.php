@@ -10,12 +10,12 @@ $db->next_record(MYSQL_ASSOC);
 $count = $db->Record['total_legacy_invoices'];
 $old_count = file_get_contents('/home/my/logs/legacy_counts.txt');
 if ($count < $old_count) {
-	$smarty = new TFSmarty();
-	$smarty->assign('old_count', $old_count);
-	$smarty->Assign('count', $count);
-	$msg = $smarty->fetch('email/admin/legacy_invoices.tpl');
-	echo "{$msg}\n";
-	myadmin_log('servers', 'warning', $msg, __LINE__, __FILE__);
-	(new \MyAdmin\Mail())->adminMail('Legacy Billing Invoice Error!', $msg, 'my@interserver.net', 'admin/legacy_invoices.tpl');
+    $smarty = new TFSmarty();
+    $smarty->assign('old_count', $old_count);
+    $smarty->Assign('count', $count);
+    $msg = $smarty->fetch('email/admin/legacy_invoices.tpl');
+    echo "{$msg}\n";
+    myadmin_log('servers', 'warning', $msg, __LINE__, __FILE__);
+    (new \MyAdmin\Mail())->adminMail('Legacy Billing Invoice Error!', $msg, 'my@interserver.net', 'admin/legacy_invoices.tpl');
 }
 file_put_contents('/home/my/logs/legacy_counts.txt', $count);

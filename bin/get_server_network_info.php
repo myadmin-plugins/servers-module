@@ -3,7 +3,7 @@
 include __DIR__.'/../../include/functions.inc.php';
 
 if (!isset($_SERVER['argv'][1])) {
-	die('Missing Server ID Parameter!
+    die('Missing Server ID Parameter!
 
 Syntax: '.$_SERVER['argv'][0].' <id>
  where <id> is a server id
