@@ -8,7 +8,7 @@ $db = clone $GLOBALS['tf']->db;
 $db->query('select count(*) as total_legacy_invoices from invoices where invoices_description="Legacy Billing Balance" and invoices_type < 10', __LINE__, __FILE__);
 $db->next_record(MYSQL_ASSOC);
 $count = $db->Record['total_legacy_invoices'];
-$old_count = file_get_contents('/home/my/logs/legacy_counts.txt');
+$old_count = file_exists('/home/my/logs/legacy_counts.txt') ? file_get_contents('/home/my/logs/legacy_counts.txt') : 0;
 if ($count < $old_count) {
     $smarty = new TFSmarty();
     $smarty->assign('old_count', $old_count);
