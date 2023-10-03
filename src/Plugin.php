@@ -47,21 +47,9 @@ class Plugin
     public static function getHooks()
     {
         return [
-            self::$module.'.activate' => [__CLASS__, 'getActivate'],
             self::$module.'.load_processing' => [__CLASS__, 'loadProcessing'],
             self::$module.'.settings' => [__CLASS__, 'getSettings']
         ];
-    }
-
-
-    /**
-     * @param \Symfony\Component\EventDispatcher\GenericEvent $event
-     */
-    public static function getActivate(GenericEvent $event)
-    {
-        $serviceClass = $event->getSubject();
-        myadmin_log(self::$module, 'info', 'Dedicated Server Activation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
-        $event->stopPropagation();
     }
 
     /**
@@ -94,7 +82,51 @@ class Plugin
                 $email = $smarty->fetch('email/admin/server_reactivated.tpl');
                 $subject = $serviceInfo[$settings['TITLE_FIELD']].' '.$serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name'].' '.$settings['TBLNAME'].' Reactivated';
                 (new \MyAdmin\Mail())->adminMail($subject, $email, false, 'admin/server_reactivated.tpl');
-            })->setDisable(function () {
+                function_requirements('setServerStatus');
+                setServerStatus($serviceInfo[$settings['PREFIX'].'_id'], 'active');
+            })->setDisable(function ($service) {
+                $serviceInfo = $service->getServiceInfo();
+                $settings = get_module_settings(self::$module);
+                function_requirements('setServerStatus');
+                setServerStatus($serviceInfo[$settings['PREFIX'].'_id'], 'suspended');
+            })->setTerminate(function ($service) {
+                $serviceInfo = $service->getServiceInfo();
+                $settings = get_module_settings(self::$module);
+                $serviceTypes = run_event('get_service_types', false, self::$module);
+                /*
+                if ($serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_type'] == get_service_define('MAIL_ZONEMTA')) {
+                    $class = '\\MyAdmin\\Orm\\'.get_orm_class_from_table($settings['TABLE']); */
+                    /** @var \MyAdmin\Orm\Product $class **/
+                    /*$serviceClass = new $class();
+                    $serviceClass->load_real($serviceInfo[$settings['PREFIX'].'_id']);
+                    $subevent = new GenericEvent($serviceClass, [
+                        'field1' => $serviceTypes[$serviceClass->getType()]['services_field1'],
+                        'field2' => $serviceTypes[$serviceClass->getType()]['services_field2'],
+                        'type' => $serviceTypes[$serviceClass->getType()]['services_type'],
+                        'category' => $serviceTypes[$serviceClass->getType()]['services_category'],
+                        'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid())
+                    ]);
+                    $success = true;
+                    try {
+                        $GLOBALS['tf']->dispatcher->dispatch($subevent, self::$module.'.terminate');
+                    } catch (\Exception $e) {
+                        myadmin_log('myadmin', 'error', 'Got Exception '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceClass->getId());
+                        $subject = 'Cant Connect to DB to Reactivate';
+                        $email = $subject.'<br>Username '.$serviceClass->getUsername().'<br>'.$e->getMessage();
+                        (new \MyAdmin\Mail())->adminMail($subject, $email, false, 'admin/website_connect_error.tpl');
+                        $success = false;
+                    }
+                    if ($success == true && !$subevent->isPropagationStopped()) {
+                        myadmin_log(self::$module, 'error', 'Dont know how to deactivate '.$settings['TBLNAME'].' '.$serviceInfo[$settings['PREFIX'].'_id'].' Type '.$serviceTypes[$serviceClass->getType()]['services_type'].' Category '.$serviceTypes[$serviceClass->getType()]['services_category'], __LINE__, __FILE__, self::$module, $serviceClass->getId());
+                        $success = false;
+                    }
+                    if ($success == true) {
+                        $serviceClass->setServerStatus('deleted')->save();
+                        $GLOBALS['tf']->history->add($settings['TABLE'], 'change_server_status', 'deleted', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+                    }
+                } else {
+                    $GLOBALS['tf']->history->add(self::$module.'queue', $serviceInfo[$settings['PREFIX'].'_id'], 'destroy', '', $serviceInfo[$settings['PREFIX'].'_custid']);
+                }*/
             })->register();
     }
 
