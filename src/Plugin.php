@@ -47,9 +47,33 @@ class Plugin
     public static function getHooks()
     {
         return [
+            self::$module.'.activate' => [__CLASS__, 'getActivate'],
+            self::$module.'.deactivate' => [__CLASS__, 'getDeactivate'],
             self::$module.'.load_processing' => [__CLASS__, 'loadProcessing'],
             self::$module.'.settings' => [__CLASS__, 'getSettings']
         ];
+    }
+
+
+    /**
+     * @param \Symfony\Component\EventDispatcher\GenericEvent $event
+     */
+    public static function getActivate(GenericEvent $event)
+    {
+        $serviceClass = $event->getSubject();
+        myadmin_log(self::$module, 'info', 'Dedicated Server Activation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
+        $event->stopPropagation();
+    }
+
+    /**
+     * @param \Symfony\Component\EventDispatcher\GenericEvent $event
+     */
+    public static function getDeactivate(GenericEvent $event)
+    {
+        $serviceTypes = run_event('get_service_types', false, self::$module);
+        $serviceClass = $event->getSubject();
+        myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
+        // add deactivation logic here
     }
 
     /**
