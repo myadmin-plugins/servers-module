@@ -65,7 +65,7 @@ function update_ipmi_ip()
             }
             echo $update.' row(s) updated.'.PHP_EOL;
         } elseif (isset($GLOBALS['tf']->variables->request['ipmi_mac'])) {
-            $ip_val = $final[$GLOBALS['tf']->variables->request['ipmi_mac']] ?? '';
+            $ip_val = $final[strtolower($GLOBALS['tf']->variables->request['ipmi_mac'])] ?? '';
             $mac_key = $GLOBALS['tf']->variables->request['ipmi_mac'];
             if ($mac_key) {
                 $db->query("SELECT * FROM assets WHERE ipmi_mac = '{$mac_key}' ORDER BY id DESC LIMIT 1");
