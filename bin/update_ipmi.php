@@ -17,6 +17,7 @@ function update_ipmi_ip()
     if (!isset($_SERVER['SSH_CLIENT']) && $GLOBALS['tf']->ima !== 'admin' && $GLOBALS['tf']->accounts->data['ima'] !== 'admin') {
         die('You\'re not authorized');
     }
+    $final = [];
     if ($stream = fopen('http://162.250.127.210/dhcpd.leases', 'rb')) {
         stream_get_contents($stream, true);
         $final = [];
@@ -32,6 +33,24 @@ function update_ipmi_ip()
                 $final[$mac] = $ip;
             }
         }
+    }
+    if ($stream = fopen('http://216.219.95.21/dhcpd.leases', 'rb')) {
+        stream_get_contents($stream, true);
+        $final = [];
+        while ($line = fgets($stream)) {
+            flush();
+            if (strpos($line, 'lease ') !== false) {
+                $temp_lease = substr($line, 6);
+                $ip = substr(trim($temp_lease), 0, -2);
+            }
+            if (strpos($line, 'hardware ethernet ') !== false) {
+                $temp_mac = substr($line, 20);
+                $mac = substr(trim($temp_mac), 0, -1);
+                $final[$mac] = $ip;
+            }
+        }
+    }
+    if (count($final) > 0) {
         $db = clone $GLOBALS['tf']->db;
         if (isset($_SERVER['SSH_CLIENT'])) {
             $update = 0;
