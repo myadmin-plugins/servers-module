@@ -73,7 +73,8 @@ class Plugin
         $serviceTypes = run_event('get_service_types', false, self::$module);
         $serviceClass = $event->getSubject();
         myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
-        // add deactivation logic here
+        function_requirements('setServerStatus');
+        setServerStatus($serviceClass->getId(), 'suspended');
     }
 
     /**
@@ -111,6 +112,7 @@ class Plugin
             })->setDisable(function ($service) {
                 $serviceInfo = $service->getServiceInfo();
                 $settings = get_module_settings(self::$module);
+                myadmin_log(self::$module, 'info', self::$name.' Disable', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
                 function_requirements('setServerStatus');
                 setServerStatus($serviceInfo[$settings['PREFIX'].'_id'], 'suspended');
             })->setTerminate(function ($service) {
