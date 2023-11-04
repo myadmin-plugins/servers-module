@@ -113,8 +113,8 @@ class Plugin
                 $serviceInfo = $service->getServiceInfo();
                 $settings = get_module_settings(self::$module);
                 myadmin_log(self::$module, 'info', self::$name.' Disable', __LINE__, __FILE__, self::$module, $serviceInfo[$settings['PREFIX'].'_id']);
-                function_requirements('setServerStatus');
-                setServerStatus($serviceInfo[$settings['PREFIX'].'_id'], 'suspended');
+                //function_requirements('setServerStatus');
+                //setServerStatus($serviceInfo[$settings['PREFIX'].'_id'], 'suspended');
             })->setTerminate(function ($service) {
                 $serviceInfo = $service->getServiceInfo();
                 $settings = get_module_settings(self::$module);
