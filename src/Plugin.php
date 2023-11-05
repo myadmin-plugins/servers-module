@@ -72,9 +72,13 @@ class Plugin
     {
         $serviceTypes = run_event('get_service_types', false, self::$module);
         $serviceClass = $event->getSubject();
+        $newServerStatus = 'suspended';
         myadmin_log(self::$module, 'info', self::$name.' Deactivation', __LINE__, __FILE__, self::$module, $serviceClass->getId());
         function_requirements('setServerStatus');
-        setServerStatus($serviceClass->getId(), 'suspended');
+        setServerStatus($serviceClass->getId(), $newServerStatus);
+        $event['success'] = true;
+        $event['new_status'] = $newServerStatus;
+        $event->stopPropagation();
     }
 
     /**
