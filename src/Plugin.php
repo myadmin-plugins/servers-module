@@ -99,6 +99,7 @@ class Plugin
                 $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active-billing' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
                 $GLOBALS['tf']->history->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
                 admin_email_server_pending_setup($serviceInfo[$settings['PREFIX'].'_id']);
+                check_order_from($serviceInfo);
             })->setReactivate(function ($service) {
                 $serviceTypes = run_event('get_service_types', false, self::$module);
                 $serviceInfo = $service->getServiceInfo();
