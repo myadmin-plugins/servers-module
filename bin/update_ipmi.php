@@ -18,38 +18,18 @@ function update_ipmi_ip()
         die('You\'re not authorized');
     }
     $final = [];
-    if ($stream = fopen('http://162.250.127.210/dhcpd.leases', 'rb')) {
-        stream_get_contents($stream, true);
-        $final = [];
-        while ($line = fgets($stream)) {
-            flush();
-            if (strpos($line, 'lease ') !== false) {
-                $temp_lease = substr($line, 6);
-                $ip = substr(trim($temp_lease), 0, -2);
-            }
-            if (strpos($line, 'hardware ethernet ') !== false) {
-                $temp_mac = substr($line, 20);
-                $mac = substr(trim($temp_mac), 0, -1);
-                $final[$mac] = $ip;
-            }
+    if (preg_match_all('/^lease ([\d\.]*) {.*hardware ethernet ([^;\n]*);?\n.*}/msuU', file_get_contents('http://162.250.127.210/dhcpd.leases'), $matches)) {
+        foreach ($matches[1] as $idx => $ip) {
+            $final[$matches[2][$idx]] = $ip;
         }
     }
-    if ($stream = fopen('http://216.219.95.21/dhcpd.leases', 'rb')) {
-        stream_get_contents($stream, true);
-        $final = [];
-        while ($line = fgets($stream)) {
-            flush();
-            if (strpos($line, 'lease ') !== false) {
-                $temp_lease = substr($line, 6);
-                $ip = substr(trim($temp_lease), 0, -2);
-            }
-            if (strpos($line, 'hardware ethernet ') !== false) {
-                $temp_mac = substr($line, 20);
-                $mac = substr(trim($temp_mac), 0, -1);
-                $final[$mac] = $ip;
-            }
+    if (preg_match_all('/^lease ([\d\.]*) {.*hardware ethernet ([^;\n]*);?\n.*}/msuU', file_get_contents('http://216.219.95.21/dhcpd.leases'), $matches)) {
+        foreach ($matches[1] as $idx => $ip) {
+            $final[$matches[2][$idx]] = $ip;
         }
     }
+    //myadmin_log('myadmin', 'debug', json_encode($final), __LINE__, __FILE__);
+    //myadmin_log('myadmin', 'debug', json_encode($final[strtolower($GLOBALS['tf']->variables->request['ipmi_mac'])]), __LINE__, __FILE__);
     if (count($final) > 0) {
         $db = clone $GLOBALS['tf']->db;
         if (isset($_SERVER['SSH_CLIENT'])) {
