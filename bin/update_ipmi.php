@@ -18,14 +18,20 @@ function update_ipmi_ip()
         die('You\'re not authorized');
     }
     $final = [];
-    if (preg_match_all('/^lease ([\d\.]*) {.*hardware ethernet ([^;\n]*);?\n.*}/msuU', file_get_contents('http://162.250.127.210/dhcpd.leases'), $matches)) {
-        foreach ($matches[1] as $idx => $ip) {
-            $final[$matches[2][$idx]] = $ip;
-        }
-    }
-    if (preg_match_all('/^lease ([\d\.]*) {.*hardware ethernet ([^;\n]*);?\n.*}/msuU', file_get_contents('http://216.219.95.21/dhcpd.leases'), $matches)) {
-        foreach ($matches[1] as $idx => $ip) {
-            $final[$matches[2][$idx]] = $ip;
+    foreach (['162.250.127.210', '216.219.95.21'] as $dhcpHost) {
+        if (preg_match_all('/^lease (?P<ip>[\d\.]*) {.*ends (?P<dayofweek>\d+) (?P<year>\d+)\/(?P<month>\d+)\/(?P<day>\d+) (?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+);.* ethernet (?P<mac>[a-f\d:]+)\s*;.*}/msuU', file_get_contents('http://'.$dhcpHost.'/dhcpd.leases'), $matches)) {
+            foreach ($matches['mac'] as $idx => $mac) {
+                // Parse the lease timestamp
+                $timestamp = mktime($matches['hour'][$idx], $matches['minute'][$idx], $matches['second'][$idx], $matches['month'][$idx], $matches['day'][$idx], $matches['year'][$idx]);
+                // Check if this MAC address is already in the final array
+                if (!isset($final[$mac]) || $final[$mac]['timestamp'] < $timestamp) {
+                    // Store the IP and timestamp for the most recent lease
+                    $final[$mac] = [
+                        'ip' => $matches['ip'][$idx],
+                        'timestamp' => $timestamp
+                    ];
+                }
+            }
         }
     }
     //myadmin_log('myadmin', 'debug', json_encode($final), __LINE__, __FILE__);
@@ -34,7 +40,8 @@ function update_ipmi_ip()
         $db = clone $GLOBALS['tf']->db;
         if (isset($_SERVER['SSH_CLIENT'])) {
             $update = 0;
-            foreach ($final as $mac_key => $ip_val) {
+            foreach ($final as $mac_key => $ipData) {
+                $ip_val = $ipData['ip'];
                 $db->query("SELECT * FROM assets WHERE ipmi_mac = '{$mac_key}' ORDER BY id DESC LIMIT 1");
                 if ($db->num_rows() > 0) {
                     $db->next_record(MYSQL_ASSOC);
@@ -45,7 +52,7 @@ function update_ipmi_ip()
             }
             echo $update.' row(s) updated.'.PHP_EOL;
         } elseif (isset($GLOBALS['tf']->variables->request['ipmi_mac'])) {
-            $ip_val = $final[strtolower($GLOBALS['tf']->variables->request['ipmi_mac'])] ?? '';
+            $ip_val = $final[strtolower($GLOBALS['tf']->variables->request['ipmi_mac'])]['ip'] ?? '';
             $mac_key = $GLOBALS['tf']->variables->request['ipmi_mac'];
             if ($mac_key) {
                 $db->query("SELECT * FROM assets WHERE ipmi_mac = '{$mac_key}' ORDER BY id DESC LIMIT 1");
