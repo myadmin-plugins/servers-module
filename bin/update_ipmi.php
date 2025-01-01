@@ -5,7 +5,7 @@
 * @author Joe Huss <detain@interserver.net>
 * @package MyAdmin
 * @category Servers
-* @copyright 2020
+* @copyright 2025
 */
 
 function update_ipmi_ip()
