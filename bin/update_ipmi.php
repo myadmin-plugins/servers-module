@@ -18,7 +18,10 @@ function update_ipmi_ip()
         die('You\'re not authorized');
     }
     $final = [];
-    foreach (['162.250.127.210', '216.219.95.21'] as $dhcpHost) {
+    $db = get_module_db('default');
+    $db->query("select * from ipmi_hosts", __LINE__, __FILE__);
+    while ($db->next_record(MYSQL_ASSOC)) {
+        $dhcpHost = $db->Record['host_ip'];
         if (preg_match_all('/^lease (?P<ip>[\d\.]*) {.*ends (?P<dayofweek>\d+) (?P<year>\d+)\/(?P<month>\d+)\/(?P<day>\d+) (?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+);.* ethernet (?P<mac>[a-f\d:]+)\s*;.*}/msuU', file_get_contents('http://'.$dhcpHost.'/dhcpd.leases'), $matches)) {
             foreach ($matches['mac'] as $idx => $mac) {
                 // Parse the lease timestamp
