@@ -92,28 +92,14 @@ class Plugin
         $service = $event->getSubject();
         $service->setModule(self::$module)
             ->setEnable(function ($service) {
-                $start = time();
-                myadmin_log('myadmin', 'debug', 'Server Activation Timing Start', __LINE__, __FILE__);
                 $serviceTypes = run_event('get_service_types', false, self::$module);
                 $serviceInfo = $service->getServiceInfo();
                 $settings = get_module_settings(self::$module);
                 $db = get_module_db(self::$module);
                 $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active-billing' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
-                $end = time();
-                myadmin_log('myadmin', 'debug', 'Server Activation Timing '.($end - $start), __LINE__, __FILE__);
-                $start = $end;
                 $GLOBALS['tf']->history->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
-                $end = time();
-                myadmin_log('myadmin', 'debug', 'Server Activation Timing '.($end - $start), __LINE__, __FILE__);
-                $start = $end;
                 check_order_from($serviceInfo);
-                $end = time();
-                myadmin_log('myadmin', 'debug', 'Server Activation Timing '.($end - $start), __LINE__, __FILE__);
-                $start = $end;
                 admin_email_server_pending_setup($serviceInfo[$settings['PREFIX'].'_id']);
-                $end = time();
-                myadmin_log('myadmin', 'debug', 'Server Activation Timing '.($end - $start), __LINE__, __FILE__);
-                $start = $end;
             })->setReactivate(function ($service) {
                 $serviceTypes = run_event('get_service_types', false, self::$module);
                 $serviceInfo = $service->getServiceInfo();
