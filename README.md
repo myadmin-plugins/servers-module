@@ -1,28 +1,42 @@
 # Dedicated Servers Module for MyAdmin
 
-Dedicated Servers Module for MyAdmin
+[![Tests](https://github.com/detain/myadmin-servers-module/actions/workflows/tests.yml/badge.svg)](https://github.com/detain/myadmin-servers-module/actions/workflows/tests.yml)
+[![Latest Stable Version](https://poser.pugx.org/detain/myadmin-servers-module/version)](https://packagist.org/packages/detain/myadmin-servers-module)
+[![Total Downloads](https://poser.pugx.org/detain/myadmin-servers-module/downloads)](https://packagist.org/packages/detain/myadmin-servers-module)
+[![License](https://poser.pugx.org/detain/myadmin-servers-module/license)](https://packagist.org/packages/detain/myadmin-servers-module)
 
-## Build Status and Code Analysis
+A MyAdmin plugin module that provides dedicated server management capabilities. It integrates with the MyAdmin service lifecycle to handle server provisioning, activation, reactivation, deactivation, and suspension through the Symfony EventDispatcher system.
 
-Site          | Status
---------------|---------------------------
-![Travis-CI](http://i.is.cc/storage/GYd75qN.png "Travis-CI")     | [![Build Status](https://travis-ci.org/detain/myadmin-servers-module.svg?branch=master)](https://travis-ci.org/detain/myadmin-servers-module)
-![CodeClimate](http://i.is.cc/storage/GYlageh.png "CodeClimate")  | [![Code Climate](https://codeclimate.com/github/detain/myadmin-servers-module/badges/gpa.svg)](https://codeclimate.com/github/detain/myadmin-servers-module) [![Test Coverage](https://codeclimate.com/github/detain/myadmin-servers-module/badges/coverage.svg)](https://codeclimate.com/github/detain/myadmin-servers-module/coverage) [![Issue Count](https://codeclimate.com/github/detain/myadmin-servers-module/badges/issue_count.svg)](https://codeclimate.com/github/detain/myadmin-servers-module)
-![Scrutinizer](http://i.is.cc/storage/GYeUnux.png "Scrutinizer")   | [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/?branch=master) [![Code Coverage](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/?branch=master) [![Build Status](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/badges/build.png?b=master)](https://scrutinizer-ci.com/g/myadmin-plugins/servers-module/build-status/master)
-![Codacy](http://i.is.cc/storage/GYi66Cx.png "Codacy")        | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/226251fc068f4fd5b4b4ef9a40011d06)](https://www.codacy.com/app/detain/myadmin-servers-module) [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/25fa74eb74c947bf969602fcfe87e349)](https://www.codacy.com/app/detain/myadmin-servers-module?utm_source=github.com&utm_medium=referral&utm_content=detain/myadmin-servers-module&utm_campaign=Badge_Coverage)
-![Coveralls](http://i.is.cc/storage/GYjNSim.png "Coveralls")    | [![Coverage Status](https://coveralls.io/repos/github/detain/db_abstraction/badge.svg?branch=master)](https://coveralls.io/github/detain/myadmin-servers-module?branch=master)
-![Packagist](http://i.is.cc/storage/GYacBEX.png "Packagist")     | [![Latest Stable Version](https://poser.pugx.org/detain/myadmin-servers-module/version)](https://packagist.org/packages/detain/myadmin-servers-module) [![Total Downloads](https://poser.pugx.org/detain/myadmin-servers-module/downloads)](https://packagist.org/packages/detain/myadmin-servers-module) [![Latest Unstable Version](https://poser.pugx.org/detain/myadmin-servers-module/v/unstable)](//packagist.org/packages/detain/myadmin-servers-module) [![Monthly Downloads](https://poser.pugx.org/detain/myadmin-servers-module/d/monthly)](https://packagist.org/packages/detain/myadmin-servers-module) [![Daily Downloads](https://poser.pugx.org/detain/myadmin-servers-module/d/daily)](https://packagist.org/packages/detain/myadmin-servers-module) [![License](https://poser.pugx.org/detain/myadmin-servers-module/license)](https://packagist.org/packages/detain/myadmin-servers-module)
+## Features
 
+- Dedicated server service lifecycle management (activate, deactivate, enable, reactivate, disable, terminate)
+- Configurable billing with prorate support and customizable day offsets
+- Automated email notifications for server reactivation events and pending setup alerts
+- Admin settings panel with out-of-stock toggle for controlling server sales
+- Event-driven architecture using Symfony EventDispatcher hooks
+- Server status management with suspended and active-billing states
 
 ## Installation
 
-Install with composer like
+Install with Composer:
 
 ```sh
 composer require detain/myadmin-servers-module
 ```
 
+## Configuration
+
+The module provides configurable settings through the `Plugin::$settings` array including service ID offsets, billing parameters, suspension thresholds, and database table mappings.
+
+## Testing
+
+Run the test suite with PHPUnit:
+
+```sh
+composer install
+vendor/bin/phpunit
+```
+
 ## License
 
-The Dedicated Servers Module for MyAdmin class is licensed under the LGPL-v2.1 license.
-
+The Dedicated Servers Module for MyAdmin is licensed under the LGPL-v2.1 license.
