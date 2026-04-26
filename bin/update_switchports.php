@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 include_once __DIR__.'/../../include/functions.inc.php';
-$db = clone $GLOBALS['tf']->db;
-$db2 = clone $GLOBALS['tf']->db;
+$db = clone \MyAdmin\App::db();
+$db2 = clone \MyAdmin\App::db();
 $db->query('select * from switchports where server_id is not null;', __LINE__, __FILE__);
 while ($db->next_record(MYSQL_ASSOC)) {
     $db2->query("select * from assets where order_id={$db->Record['server_id']}", __LINE__, __FILE__);

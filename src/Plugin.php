@@ -97,7 +97,7 @@ class Plugin
                 $settings = get_module_settings(self::$module);
                 $db = get_module_db(self::$module);
                 $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active-billing' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
-                $GLOBALS['tf']->history->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+                \MyAdmin\App::history()->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
                 check_order_from($serviceInfo);
                 admin_email_server_pending_setup($serviceInfo[$settings['PREFIX'].'_id']);
             })->setReactivate(function ($service) {
@@ -106,7 +106,7 @@ class Plugin
                 $settings = get_module_settings(self::$module);
                 $db = get_module_db(self::$module);
                 $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
-                $GLOBALS['tf']->history->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+                \MyAdmin\App::history()->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
                 $smarty = new \TFSmarty();
                 $smarty->assign('server_name', $serviceTypes[$serviceInfo[$settings['PREFIX'].'_type']]['services_name']);
                 $email = $smarty->fetch('email/admin/server_reactivated.tpl');
@@ -135,11 +135,11 @@ class Plugin
                         'field2' => $serviceTypes[$serviceClass->getType()]['services_field2'],
                         'type' => $serviceTypes[$serviceClass->getType()]['services_type'],
                         'category' => $serviceTypes[$serviceClass->getType()]['services_category'],
-                        'email' => $GLOBALS['tf']->accounts->cross_reference($serviceClass->getCustid())
+                        'email' => \MyAdmin\App::accounts()->cross_reference($serviceClass->getCustid())
                     ]);
                     $success = true;
                     try {
-                        $GLOBALS['tf']->dispatcher->dispatch($subevent, self::$module.'.terminate');
+                        \MyAdmin\App::events()->dispatch($subevent, self::$module.'.terminate');
                     } catch (\Exception $e) {
                         myadmin_log('myadmin', 'error', 'Got Exception '.$e->getMessage(), __LINE__, __FILE__, self::$module, $serviceClass->getId());
                         $subject = 'Cant Connect to DB to Reactivate';
@@ -153,10 +153,10 @@ class Plugin
                     }
                     if ($success == true) {
                         $serviceClass->setServerStatus('deleted')->save();
-                        $GLOBALS['tf']->history->add($settings['TABLE'], 'change_server_status', 'deleted', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+                        \MyAdmin\App::history()->add($settings['TABLE'], 'change_server_status', 'deleted', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
                     }
                 } else {
-                    $GLOBALS['tf']->history->add(self::$module.'queue', $serviceInfo[$settings['PREFIX'].'_id'], 'destroy', '', $serviceInfo[$settings['PREFIX'].'_custid']);
+                    \MyAdmin\App::history()->add(self::$module.'queue', $serviceInfo[$settings['PREFIX'].'_id'], 'destroy', '', $serviceInfo[$settings['PREFIX'].'_custid']);
                 }*/
             })->register();
     }

@@ -1,10 +1,10 @@
 #!/usr/bin/env php
 <?php
 include_once __DIR__.'/../../../../include/functions.inc.php';
-$GLOBALS['tf']->session->create(160307, 'services', false, 0, false, substr(basename($_SERVER['argv'][0], '.php'), 0, 32));
+\MyAdmin\App::session()->create(160307, 'services', false, 0, false, substr(basename($_SERVER['argv'][0], '.php'), 0, 32));
 $gb = 1073741824;
 ini_set('memory_limit', 4*$gb);
-$db = clone $GLOBALS['tf']->db;
+$db = clone \MyAdmin\App::db();
 $db->query('select count(*) as total_legacy_invoices from invoices where invoices_description="Legacy Billing Balance" and invoices_type < 10', __LINE__, __FILE__);
 $db->next_record(MYSQL_ASSOC);
 $count = $db->Record['total_legacy_invoices'];

@@ -2,8 +2,8 @@
 <?php
 include_once __DIR__.'/../../include/functions.inc.php';
 include_once __DIR__.'/../../vendor/detain/cpanel-licensing/src/Cpanel.php';
-$db = clone $GLOBALS['tf']->db;
-$db2 = clone $GLOBALS['tf']->db;
+$db = clone \MyAdmin\App::db();
+$db2 = clone \MyAdmin\App::db();
 $license_type = 5008;
 $license_cost = 25;
 echo 'Building list of servers + main ips';
