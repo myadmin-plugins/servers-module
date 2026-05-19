@@ -12,7 +12,10 @@ function update_ipmi_ip()
 {
     require_once __DIR__.'/../../../../include/functions.inc.php';
     if (isset($_SERVER['argv'])) {
-        \MyAdmin\App::session()->create(160307, 'services', false, 0, false, substr(basename($_SERVER['argv'][0], '.php'), 0, 32));
+        \MyAdmin\App::session()->sessionid = substr(basename($_SERVER['argv'][0], '.php'), 0, 32);
+        \MyAdmin\App::session()->account_id = 160307;
+        \MyAdmin\App::session()->appnocache('ima', 'services');
+        \MyAdmin\App::tf()->ima = 'services';
     }
     if (!isset($_SERVER['SSH_CLIENT']) && \MyAdmin\App::ima() !== 'admin' && \MyAdmin\App::accounts()->data['ima'] !== 'admin') {
         die('You\'re not authorized');

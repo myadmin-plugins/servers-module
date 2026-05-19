@@ -1,7 +1,10 @@
 #!/usr/bin/env php
 <?php
 include_once __DIR__.'/../../../../include/functions.inc.php';
-\MyAdmin\App::session()->create(160307, 'services', false, 0, false, substr(basename($_SERVER['argv'][0], '.php'), 0, 32));
+\MyAdmin\App::session()->sessionid = substr(basename($_SERVER['argv'][0], '.php'), 0, 32);
+\MyAdmin\App::session()->account_id = 160307;
+\MyAdmin\App::session()->appnocache('ima', 'services');
+\MyAdmin\App::tf()->ima = 'services';
 $gb = 1073741824;
 ini_set('memory_limit', 4*$gb);
 $db = clone \MyAdmin\App::db();
