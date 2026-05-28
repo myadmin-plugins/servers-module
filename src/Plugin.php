@@ -96,10 +96,15 @@ class Plugin
                 $serviceInfo = $service->getServiceInfo();
                 $settings = get_module_settings(self::$module);
                 $db = get_module_db(self::$module);
-                $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active-billing' where {$settings['PREFIX']}_id='{$serviceInfo[$settings['PREFIX'].'_id']}'", __LINE__, __FILE__);
-                \MyAdmin\App::history()->add($settings['TABLE'], 'change_status', 'active', $serviceInfo[$settings['PREFIX'].'_id'], $serviceInfo[$settings['PREFIX'].'_custid']);
+                $serverId = $serviceInfo[$settings['PREFIX'].'_id'];
+                $db->query("update {$settings['TABLE']} set {$settings['PREFIX']}_status='active-billing' where {$settings['PREFIX']}_id='{$serverId}'", __LINE__, __FILE__);
+                if ($db->affectedRows() === 0) {
+                    myadmin_log(self::$module, 'error', 'Dedicated Server Activation - update affected 0 rows for server '.$serverId, __LINE__, __FILE__, self::$module, $serverId);
+                    chatNotify('Failed [Server '.$serverId.'](https://my.interserver.net/admin/view_server?id='.$serverId.') Activation - status update affected 0 rows (server row missing?)', 'notifications');
+                }
+                \MyAdmin\App::history()->add($settings['TABLE'], 'change_status', 'active', $serverId, $serviceInfo[$settings['PREFIX'].'_custid']);
                 check_order_from($serviceInfo);
-                admin_email_server_pending_setup($serviceInfo[$settings['PREFIX'].'_id']);
+                admin_email_server_pending_setup($serverId);
             })->setReactivate(function ($service) {
                 $serviceTypes = run_event('get_service_types', false, self::$module);
                 $serviceInfo = $service->getServiceInfo();
