@@ -2,21 +2,31 @@
 
 namespace Detain\MyAdminServers\Tests;
 
+use Detain\MyAdminServers\Plugin;
+use Detain\MyAdminServers\Tests\Support\DbSpy;
+use Detain\MyAdminServers\Tests\Support\FunctionSpy;
+use Detain\MyAdminServers\Tests\Support\HistorySpy;
+use Detain\MyAdminServers\Tests\Support\LogSpy;
+use Detain\MyAdminServers\Tests\Support\ServiceHandlerSpy;
+use MyAdmin\App;
+use MyAdmin\Mail;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * Tests for the Detain\MyAdminServers\Plugin class.
  *
- * Because the Plugin class is tightly coupled to a large MyAdmin framework
- * (global functions, MyAdmin\App::tf(), database access, Smarty templates, etc.),
- * we focus on testing what can be verified without that runtime:
+ * The Plugin class is tightly coupled to a large MyAdmin framework (global
+ * functions, MyAdmin\App, database access, Smarty templates, etc.), so the
+ * lifecycle closures it registers are driven against framework test doubles
+ * installed by tests/bootstrap.php. That covers:
  *   - Class structure via ReflectionClass
  *   - Static property values (constants / config)
  *   - Pure-logic method: getHooks()
  *   - Method signatures for event handlers
- *   - Source-level checks via file_get_contents for patterns
+ *   - Behaviour of the enable/reactivate lifecycle closures
  */
 class PluginTest extends TestCase
 {
@@ -31,12 +41,55 @@ class PluginTest extends TestCase
     private $sourceFile;
 
     /**
-     * Set up reflection and source file path before each test.
+     * Fresh history spy installed on the \MyAdmin\App facade for each test.
+     *
+     * @var HistorySpy
+     */
+    private $history;
+
+    /**
+     * Set up reflection, source file path and framework spies before each test.
      */
     protected function setUp(): void
     {
         $this->reflection = new ReflectionClass(\Detain\MyAdminServers\Plugin::class);
         $this->sourceFile = dirname(__DIR__) . '/src/Plugin.php';
+        $this->resetFrameworkSpies();
+    }
+
+    /**
+     * Clears the framework spies so each recorded effect belongs to the call
+     * under test.
+     *
+     * @return void
+     */
+    private function resetFrameworkSpies(): void
+    {
+        $this->history = App::resetHistory();
+        Mail::reset();
+        DbSpy::reset();
+        LogSpy::reset();
+        FunctionSpy::reset();
+    }
+
+    /**
+     * Runs Plugin::loadProcessing() against a ServiceHandler spy carrying a
+     * representative servers row, and returns the spy.
+     *
+     * @return ServiceHandlerSpy
+     */
+    private function registerLifecycleCallbacks(): ServiceHandlerSpy
+    {
+        $handler = new ServiceHandlerSpy();
+        $handler->setServiceInfo([
+            'server_id' => 6041,
+            'server_custid' => 5522,
+            'server_hostname' => 'dedi1.example.com',
+            'server_type' => 52,
+            'server_status' => 'pending',
+        ]);
+        Plugin::loadProcessing(new GenericEvent($handler));
+        return $handler;
     }
 
     // ------------------------------------------------------------------
@@ -735,15 +788,163 @@ class PluginTest extends TestCase
     }
 
     /**
-     * Tests that the source references the history tracking mechanism.
+     * Tests that the enable closure records the status change in history.
      *
-     * Status changes are logged via the history add method.
+     * This drives the closure the plugin registers and asserts what it
+     * actually recorded. The previous version grepped src/Plugin.php for
+     * "history->add(" and "change_status", so it broke the moment the history
+     * call moved from $GLOBALS['tf']->history->add() to the
+     * \MyAdmin\App::history() facade, even though the behaviour was identical.
      */
-    public function testSourceReferencesHistoryTracking(): void
+    public function testEnableRecordsStatusChangeInHistory(): void
     {
-        $source = file_get_contents($this->sourceFile);
-        $this->assertStringContainsString('history->add(', $source);
-        $this->assertStringContainsString('change_status', $source);
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('enable');
+
+        $this->assertCount(1, $this->history->entries, 'enable should record exactly one history entry');
+        $entry = $this->history->entries[0];
+        $this->assertSame('servers', $entry['section'], 'the entry must be filed under the servers table');
+        $this->assertSame('change_status', $entry['type']);
+        $this->assertSame('active', $entry['new'], 'enable must record the new active status');
+        $this->assertSame(6041, $entry['old'], 'the entry must reference the server id');
+        $this->assertSame(5522, $entry['custid'], 'the entry must be attributed to the server owner');
+    }
+
+    /**
+     * Tests that the reactivate closure records the status change in history.
+     */
+    public function testReactivateRecordsStatusChangeInHistory(): void
+    {
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('reactivate');
+
+        $this->assertCount(1, $this->history->entries, 'reactivate should record exactly one history entry');
+        $entry = $this->history->entries[0];
+        $this->assertSame('servers', $entry['section']);
+        $this->assertSame('change_status', $entry['type']);
+        $this->assertSame('active', $entry['new']);
+        $this->assertSame(6041, $entry['old']);
+        $this->assertSame(5522, $entry['custid']);
+    }
+
+    /**
+     * Tests that the enable closure flips the server row to active-billing,
+     * runs the order-origin check and queues the pending-setup notice.
+     */
+    public function testEnableActivatesBillingAndTriggersFollowUpWork(): void
+    {
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('enable');
+
+        $this->assertCount(1, DbSpy::$queries, 'enable should issue exactly one query');
+        $this->assertStringContainsString("update servers set server_status='active-billing'", DbSpy::$queries[0]);
+        $this->assertStringContainsString("server_id='6041'", DbSpy::$queries[0]);
+
+        $this->assertCount(1, FunctionSpy::callsFor('check_order_from'));
+        $this->assertSame([6041], FunctionSpy::callsFor('admin_email_server_pending_setup')[0]);
+    }
+
+    /**
+     * Tests that enable escalates when the status update matched no rows,
+     * which is how a missing servers row shows up in production.
+     */
+    public function testEnableEscalatesWhenStatusUpdateMatchesNoRows(): void
+    {
+        DbSpy::$affectedRows = 0;
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('enable');
+
+        $errors = LogSpy::callsAtLevel('error');
+        $this->assertCount(1, $errors, 'a no-op status update must be logged as an error');
+        $this->assertStringContainsString('affected 0 rows', $errors[0]['message']);
+
+        $notified = FunctionSpy::callsFor('chatNotify');
+        $this->assertCount(1, $notified, 'a no-op status update must raise a chat notification');
+        $this->assertStringContainsString('affected 0 rows', $notified[0][0]);
+        $this->assertSame('notifications', $notified[0][1]);
+
+        $this->assertCount(1, $this->history->entries, 'the history entry is still recorded');
+    }
+
+    /**
+     * Tests that the reactivate closure flips the row back to active, notifies
+     * the admins and hands the server back to setServerStatus().
+     */
+    public function testReactivateActivatesTheRowNotifiesAdminsAndSetsServerStatus(): void
+    {
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('reactivate');
+
+        $this->assertCount(1, DbSpy::$queries, 'reactivate should issue exactly one query');
+        $this->assertStringContainsString("update servers set server_status='active'", DbSpy::$queries[0]);
+        $this->assertStringContainsString("server_id='6041'", DbSpy::$queries[0]);
+
+        $this->assertCount(1, Mail::$sent, 'reactivate should send exactly one admin notification');
+        $this->assertSame('admin/server_reactivated.tpl', Mail::$sent[0]['template']);
+        $this->assertSame('rendered:email/admin/server_reactivated.tpl', Mail::$sent[0]['email']);
+
+        $this->assertSame([['setServerStatus']], FunctionSpy::callsFor('function_requirements'));
+        $this->assertSame([[6041, 'active']], FunctionSpy::callsFor('setServerStatus'));
+    }
+
+    /**
+     * Tests that loadProcessing wires the module name and lifecycle closures
+     * onto the ServiceHandler and registers it.
+     */
+    public function testLoadProcessingRegistersLifecycleCallbacks(): void
+    {
+        $handler = $this->registerLifecycleCallbacks();
+
+        $this->assertSame('servers', $handler->module);
+        $this->assertTrue($handler->registered, 'loadProcessing must call register()');
+        $this->assertSame(['enable', 'reactivate', 'disable', 'terminate'], array_keys($handler->callbacks));
+    }
+
+    /**
+     * Tests that the disable closure logs the disable without touching the
+     * server row, matching the deliberately commented-out suspend call.
+     */
+    public function testDisableOnlyLogs(): void
+    {
+        $handler = $this->registerLifecycleCallbacks();
+        $handler->run('disable');
+
+        $this->assertSame([], DbSpy::$queries, 'disable must not touch the server row');
+        $this->assertSame([], FunctionSpy::callsFor('setServerStatus'));
+        $this->assertSame([], $this->history->entries);
+
+        $logged = LogSpy::calls();
+        $this->assertCount(1, $logged, 'disable should log exactly once');
+        $this->assertStringContainsString('Disable', $logged[0]['message']);
+        $this->assertSame(6041, $logged[0]['id']);
+    }
+
+    /**
+     * Tests that getDeactivate suspends the server and reports the outcome
+     * back on the event, stopping further handlers.
+     */
+    public function testGetDeactivateSuspendsServerAndReportsOnEvent(): void
+    {
+        $serviceClass = new class {
+            /** @return int */
+            public function getId()
+            {
+                return 6041;
+            }
+        };
+        $event = new GenericEvent($serviceClass);
+
+        Plugin::getDeactivate($event);
+
+        $this->assertSame([[6041, 'suspended']], FunctionSpy::callsFor('setServerStatus'));
+        $this->assertTrue($event['success']);
+        $this->assertSame('suspended', $event['new_status']);
+        $this->assertTrue($event->isPropagationStopped());
+
+        $logged = LogSpy::calls();
+        $this->assertCount(1, $logged);
+        $this->assertStringContainsString('Deactivation', $logged[0]['message']);
+        $this->assertSame(6041, $logged[0]['id']);
     }
 
     /**
