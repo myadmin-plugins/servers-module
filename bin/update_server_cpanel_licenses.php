@@ -97,6 +97,7 @@ foreach ($licenses['licenses'] as $idx => $licenseData) {
                             $settings['PREFIX'].'_type' => $license_type,
                             $settings['PREFIX'].'_custid' => $db->Record['repeat_invoices_custid'],
                             $settings['PREFIX'].'_order_date' => $db->Record['repeat_invoices_date'],
+                            $settings['PREFIX'].'_uuid' => new_uuid_sql($db->Record['repeat_invoices_date']),
                             $settings['PREFIX'].'_ip' => $ip,
                             $settings['PREFIX'].'_status' => 'active',
                             $settings['PREFIX'].'_invoice' => $rid,
