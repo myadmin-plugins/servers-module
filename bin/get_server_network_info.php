@@ -9,4 +9,5 @@ Syntax: '.$_SERVER['argv'][0].' <id>
  where <id> is a server id');
 }
 $info = get_server_network_info($_SERVER['argv'][1]);
-echo str_replace('\\/', '/', json_encode($info, JSON_PRETTY_PRINT)).PHP_EOL;
+// the asset passwords are masked (MyAdmin plan_2way §5.5, R2-M7); the rest prints as before
+echo str_replace('\\/', '/', json_encode(\Detain\MyAdminServers\NetworkInfoOutput::mask($info), JSON_PRETTY_PRINT)).PHP_EOL;
